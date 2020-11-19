@@ -35,14 +35,14 @@ export default {
       addrList: [
         {
           name: "开发环境",
-          key: "http://localhost:2379",
+          key: "http://123.207.16.31:2379",
         },
         {
           name: "测试环境",
           key: "http://localhost:2380",
         },
       ],
-      connectAddr: "http://localhost:2379",
+      connectAddr: "http://123.207.16.31:2379",
       connected: true,
     };
   },

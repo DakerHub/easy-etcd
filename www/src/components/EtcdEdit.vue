@@ -21,7 +21,7 @@
             </a-radio-group>
           </div>
         </div>
-        <div>
+        <div class="tree-view-main">
           <a-directory-tree
             v-if="listMode === 'tree'"
             showLine
@@ -49,9 +49,12 @@
 
             <template slot="tree-title" slot-scope="{ key, isNew }">
               <a-icon v-if="isNew" type="file-exclamation" theme="filled" style="color: cyan; margin-right: 2px" />
-              <span>{{ key }}</span>
+              <span :title="key">{{ key }}</span>
             </template>
           </a-tree>
+        </div>
+        <div class="tree-view-footer">
+          <span>共{{ rawList.length }}条记录</span>
         </div>
       </template>
 
@@ -126,7 +129,7 @@ export default {
       treeData: [],
       rawList: [],
       expandedKeys: [],
-      listMode: "list",
+      listMode: "tree",
       replaceFields: {
         title: "name",
       },
@@ -159,6 +162,14 @@ export default {
       if (selectKey !== undefined) {
         const target = this.rawList.find((el) => el.key === selectKey);
         this.currentEdit = Object.assign({}, target || {});
+
+        // 格式化JSON展示
+        /* eslint-disable no-empty */
+        if (this.format === "json") {
+          this.formatJSON();
+        }
+      } else {
+        this.currentEdit = {};
       }
     },
   },
@@ -169,14 +180,23 @@ export default {
     async fetchKvs() {
       const res = await getAllKvs(this.connectAddr);
       this.rawList = res.kvs;
-      this.expandedKeys = this.rawList.map((i) => i.key);
+      // this.expandedKeys = this.rawList.map((i) => i.key);
       this.listToTree();
     },
     async save() {
       this.saving = true;
 
       try {
-        const { key, value } = this.currentEdit;
+        let { key, value } = this.currentEdit;
+
+        if (this.format === "json") {
+          // 存储时还原JSON格式
+          /* eslint-disable no-empty */
+          try {
+            value = JSON.stringify(JSON.parse(value), {}, 0);
+          } catch (error) {}
+        }
+
         await putKv(this.connectAddr, key, value);
         this.$alertSuccess("保存成功");
         this.updateList(key, { value, isNew: false });
@@ -202,6 +222,7 @@ export default {
 
             this.$alertSuccess("删除成功");
             this.removeItem(key);
+            this.currentSelect = [];
           } catch (error) {
             this.$alertError("删除失败");
           }
@@ -241,6 +262,8 @@ export default {
         node.selectable = !!node.isLeaf;
         return node;
       });
+
+      this.currentSelect = [key];
     },
     updateList(key, newItem) {
       const target = this.rawList.find((el) => el.key === key);
@@ -262,10 +285,10 @@ export default {
         this.formatJSON();
       }
     },
-    formatJSON() {
+    formatJSON(indent = 2) {
       /* eslint-disable no-empty */
       try {
-        this.currentEdit.value = JSON.stringify(JSON.parse(this.currentEdit.value), {}, 2);
+        this.currentEdit.value = JSON.stringify(JSON.parse(this.currentEdit.value), {}, indent);
       } catch (error) {}
     },
   },
@@ -282,6 +305,8 @@ export default {
   box-shadow: 0 0 15px 1px #31354b;
 }
 .tree-view {
+  display: flex;
+  flex-direction: column;
   width: 200px;
   flex-shrink: 0;
   padding-right: 10px;
@@ -294,6 +319,10 @@ export default {
   background-color: var(--bg-color-3);
   padding: 5px;
   border-left: 2px solid #ccc;
+}
+.tree-view-main {
+  height: 100%;
+  overflow: auto;
 }
 .tree-view-tool .ant-btn-background-ghost:hover {
   background-color: var(--bg-color-2) !important;
@@ -309,6 +338,13 @@ export default {
   margin-left: 20px;
   display: flex;
   flex-direction: column;
+}
+.tree-view-footer {
+  height: 20px;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: right;
+  border-top: thin solid var(--border-color);
 }
 .edit-head {
   display: flex;
@@ -393,5 +429,8 @@ export default {
 }
 .ant-tree.list-view >>> li .ant-tree-node-content-wrapper {
   width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
