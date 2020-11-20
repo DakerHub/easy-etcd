@@ -21,6 +21,31 @@ type PutKvPamras struct {
 	Value string   `json:"value", binding:"required"`
 }
 
+func RouteConnect(c *gin.Context) {
+	params := GetAllKVParams{}
+	if c.ShouldBind(&params) != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "请求参数错误",
+		})
+		return
+	}
+
+	auth, _ := c.Get("auth")
+
+	cli, err := Connect(params.Nodes, auth.(Auth))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+	cli.Close()
+
+	c.JSON(200, gin.H{
+		"message": "Ok",
+	})
+}
+
 func RouteGetAllKv(c *gin.Context) {
 	params := GetAllKVParams{}
 	if c.ShouldBind(&params) != nil {
@@ -30,10 +55,12 @@ func RouteGetAllKv(c *gin.Context) {
 		return
 	}
 
-	res, err := GetByPrefix(params.Nodes, "")
+	auth, _ := c.Get("auth")
+
+	res, err := GetByPrefix(params.Nodes, auth.(Auth), "")
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": err,
+			"message": err.Error(),
 		})
 		return
 	}
@@ -50,10 +77,12 @@ func RouteDeleteKey(c *gin.Context) {
 		return
 	}
 
-	err := Del(params.Nodes, params.Key)
+	auth, _ := c.Get("auth")
+
+	err := Del(params.Nodes, auth.(Auth), params.Key)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": err,
+			"message": err.Error(),
 		})
 		return
 	}
@@ -72,11 +101,12 @@ func RoutePutKv(c *gin.Context) {
 		return
 	}
 
-	_, err := Put(params.Nodes, params.Key, params.Value)
+	auth, _ := c.Get("auth")
+	_, err := Put(params.Nodes, auth.(Auth), params.Key, params.Value)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"message": err,
+			"message": err.Error(),
 		})
 		return
 	}

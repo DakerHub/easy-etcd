@@ -3,15 +3,15 @@
     <a-layout id="app">
       <a-layout-header class="layout-header">
         <h1>Easy Etcd</h1>
-        <a-button type="link" ghost>登出</a-button>
+        <!-- <a-button type="link" ghost>登出</a-button> -->
       </a-layout-header>
       <a-layout-content>
         <router-view></router-view>
       </a-layout-content>
-      <a-layout-footer style="text-align: center">
+      <!-- <a-layout-footer style="text-align: center">
         Easy Etcd by
         <a href="https://github.com/DakerHub" target="__blank" ref="noopener">Daker</a>
-      </a-layout-footer>
+      </a-layout-footer> -->
     </a-layout>
   </a-config-provider>
 </template>

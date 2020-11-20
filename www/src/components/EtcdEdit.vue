@@ -58,6 +58,8 @@
         </div>
       </template>
 
+      <div v-else-if="loading">加载中...</div>
+
       <div v-else class="etcd-empty">
         <p>没有任何配置 <a-icon type="meh" /></p>
         <ModelInputKey title="新建键值对" @change="checkKeyExist">
@@ -136,6 +138,7 @@ export default {
       format: "plain_text",
       currentSelect: [],
       currentEdit: {},
+      loading: true,
       saving: false,
     };
   },
@@ -172,16 +175,26 @@ export default {
         this.currentEdit = {};
       }
     },
-  },
-  created() {
-    this.fetchKvs();
+    connectAddr: {
+      immediate: true,
+      handler() {
+        this.fetchKvs();
+      },
+    },
   },
   methods: {
     async fetchKvs() {
-      const res = await getAllKvs(this.connectAddr);
-      this.rawList = res.kvs;
-      // this.expandedKeys = this.rawList.map((i) => i.key);
-      this.listToTree();
+      this.loading = true;
+      try {
+        const res = await getAllKvs(this.connectAddr);
+        this.rawList = res.kvs;
+        // this.expandedKeys = this.rawList.map((i) => i.key);
+        this.listToTree();
+      } catch (error) {
+        console.error(error);
+      } finally {
+        this.loading = false;
+      }
     },
     async save() {
       this.saving = true;
@@ -298,7 +311,7 @@ export default {
 <style scoped>
 .etcd-edit {
   display: flex;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 120px);
   padding: 20px;
   background-color: var(--bg-color-1);
   border-radius: 4px;
@@ -344,7 +357,7 @@ export default {
   font-size: 12px;
   line-height: 20px;
   text-align: right;
-  border-top: thin solid var(--border-color);
+  /* border-top: thin solid var(--border-color); */
 }
 .edit-head {
   display: flex;

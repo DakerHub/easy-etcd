@@ -10,6 +10,9 @@ import (
 func SetupRouter() {
 	r := gin.Default()
 
+	r.Use(etcd.GetAuth())
+
+	r.POST("/api/connect", etcd.RouteConnect)
 	r.POST("/api/kv/query", etcd.RouteGetAllKv)
 	r.POST("/api/kv/delete", etcd.RouteDeleteKey)
 	r.POST("/api/kv/put", etcd.RoutePutKv)

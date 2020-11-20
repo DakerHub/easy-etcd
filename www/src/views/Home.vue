@@ -2,19 +2,22 @@
   <div class="home">
     <div class="etcd-box">
       <div class="etcd-host">
-        <SelectableList :list="addrList" :selectedKey.sync="connectAddr"></SelectableList>
+        <EndpointList :selectedKey.sync="connectAddr" :tokens="tokens"></EndpointList>
+        <!-- <SelectableList :list="addrList" :selectedKey.sync="connectAddr"></SelectableList> -->
       </div>
       <EtcdEdit v-if="connected" :connectAddr="connectAddr"></EtcdEdit>
-      <div v-else class="no-addr">
+      <div v-else class="tobe-connected">
         <div v-if="needConnect">
+          <h2>{{ connectAddr }}</h2>
           <p>填写当前连接地址用户信息然后点击”连接“</p>
           <div class="etcd-auth">
-            <a-input placeholder="用户名，无可填空"></a-input>
-            <a-input placeholder="密码，无可填空" type="password"></a-input>
-            <a-button type="primary">连接</a-button>
+            <a-input placeholder="用户名，无可填空" v-model="user.username"></a-input>
+            <a-input placeholder="密码，无可填空" type="password" v-model="user.password"></a-input>
+            <a-button :loading="connectting" type="primary" @click="readyToConnect">连接</a-button>
+            <a-alert v-if="connectError" style="margin-top: 10px" type="error" :message="connectError" banner />
           </div>
         </div>
-        <p v-else>👆 选择一个地址连接管理Etcd配置</p>
+        <p v-else>👈 选择一个地址连接管理Etcd配置</p>
       </div>
     </div>
   </div>
@@ -22,28 +25,27 @@
 
 <script>
 import EtcdEdit from "./../components/EtcdEdit";
-import SelectableList from "./../components/SelectableList";
+import EndpointList from "./../components/EndpointList";
+import { getTokens, setTokens } from "./../util/storage.js";
+import { testConnect } from "./../api/auth.js";
 
 export default {
   name: "Home",
   components: {
     EtcdEdit,
-    SelectableList,
+    EndpointList,
   },
   data() {
     return {
-      addrList: [
-        {
-          name: "开发环境",
-          key: "http://123.207.16.31:2379",
-        },
-        {
-          name: "测试环境",
-          key: "http://localhost:2380",
-        },
-      ],
-      connectAddr: "http://123.207.16.31:2379",
-      connected: true,
+      connectAddr: "",
+      tokens: getTokens(),
+      connected: false,
+      connectting: false,
+      connectError: "",
+      user: {
+        username: "",
+        password: "",
+      },
     };
   },
   computed: {
@@ -52,13 +54,35 @@ export default {
     },
   },
   watch: {
-    connectAddr() {
-      this.checkConnectStatus();
+    connectAddr: {
+      immediate: true,
+      handler() {
+        this.checkConnectStatus();
+      },
     },
   },
   methods: {
     checkConnectStatus() {
-      this.connected = false;
+      this.connected = Object.hasOwnProperty.call(this.tokens, this.connectAddr);
+    },
+    async readyToConnect() {
+      this.connectting = true;
+      this.connectError = "";
+      try {
+        setTokens(this.connectAddr, this.user);
+        await testConnect(this.connectAddr);
+        this.connected = true;
+        this.updateTokens();
+      } catch (error) {
+        console.error(error);
+        setTokens(this.connectAddr, undefined);
+        this.connectError = error;
+      } finally {
+        this.connectting = false;
+      }
+    },
+    updateTokens() {
+      this.tokens = getTokens();
     },
   },
 };
@@ -77,23 +101,26 @@ export default {
   height: 100%;
 }
 .etcd-host {
-  padding: 10px 20px;
+  padding: 10px 0;
+  margin-right: 20px;
+  width: 200px;
 }
-.no-addr {
-  height: calc(100vh - 200px);
+.tobe-connected {
+  height: calc(100vh - 120px);
+  width: 100%;
   padding: 20px;
   background-color: var(--bg-color-1);
   border-radius: 4px;
   box-shadow: 0 0 15px 1px #31354b;
+}
+.tobe-connected h2 {
+  color: var(--color-1);
 }
 .etcd-auth {
   width: 400px;
 }
 .etcd-auth .ant-input {
   margin-bottom: 20px;
-}
-.selectable-list {
-  width: 200px;
 }
 .ant-select >>> .ant-select-selection {
   background-color: rgba(255, 255, 255, 0.7) !important;

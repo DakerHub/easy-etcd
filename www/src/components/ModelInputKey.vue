@@ -22,7 +22,7 @@ export default {
   },
   data() {
     return {
-      value: "/test/xxxx",
+      value: "",
       visible: false,
     };
   },
