@@ -55,7 +55,8 @@ export default {
   transition: all 0.3s;
 }
 .selectable-list__item.is-selected {
-  background-color: var(--active-color-bg) !important;
+  /* background-color: var(--active-color-bg) !important; */
+  background: linear-gradient(90deg, #3f51b5, #03a9f4) !important;
   color: var(--active-color) !important;
 }
 .selectable-list__item + .selectable-list__item {

@@ -178,6 +178,7 @@ export default {
     connectAddr: {
       immediate: true,
       handler() {
+        this.currentSelect = [];
         this.fetchKvs();
       },
     },
@@ -188,7 +189,6 @@ export default {
       try {
         const res = await getAllKvs(this.connectAddr);
         this.rawList = res.kvs;
-        // this.expandedKeys = this.rawList.map((i) => i.key);
         this.listToTree();
       } catch (error) {
         console.error(error);
@@ -371,6 +371,7 @@ export default {
 .edit-title {
   font-weight: bold;
   font-size: 16px;
+  color: var(--color-0);
 }
 .edit-title-tip {
   margin-left: 5px;
