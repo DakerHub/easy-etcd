@@ -3,7 +3,7 @@ import { getTokens } from "./../util/storage";
 import { message } from "ant-design-vue";
 
 const instance = axios.create({
-  baseURL: "http://localhost:9600/api/"
+  baseURL: "/api/"
 });
 
 instance.interceptors.request.use(config => {

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"easy-etcd/src/config"
 	"easy-etcd/src/router/etcd"
 
 	"github.com/gin-gonic/gin"
@@ -10,12 +11,16 @@ import (
 func SetupRouter() {
 	r := gin.Default()
 
-	r.Use(etcd.GetAuth())
+	r.Static("/", config.StaticDir)
 
-	r.POST("/api/connect", etcd.RouteConnect)
-	r.POST("/api/kv/query", etcd.RouteGetAllKv)
-	r.POST("/api/kv/delete", etcd.RouteDeleteKey)
-	r.POST("/api/kv/put", etcd.RoutePutKv)
+	api := r.Group("/api")
+	api.Use(etcd.GetAuth())
+	{
+		api.POST("/connect", etcd.RouteConnect)
+		api.POST("/kv/query", etcd.RouteGetAllKv)
+		api.POST("/kv/delete", etcd.RouteDeleteKey)
+		api.POST("/kv/put", etcd.RoutePutKv)
+	}
 
-	r.Run("0.0.0.0:9600")
+	r.Run(config.Host + ":" + config.Port)
 }

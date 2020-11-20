@@ -345,6 +345,9 @@ export default {
   border: none !important;
   background: rgba(255, 255, 255, 0.9);
 }
+.ant-radio-group >>> .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled){
+  background: #1890ff;
+}
 
 .edit-view {
   width: 100%;
