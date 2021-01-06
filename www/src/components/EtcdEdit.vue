@@ -92,7 +92,10 @@
       <div class="edit-content__footer">
         <a-button :loading="saving" type="primary" icon="sync" @click="save">保存</a-button>
         <div>
-          <a-button v-if="format === 'json'" ghost style="margin-right: 5px" @click="formatJSON">格式化</a-button>
+          <a-tooltip title="设置为默认文本格式">
+            <a-switch :checked="isDefaultType" @change="onTypeChange" style="margin-right: 10px"></a-switch>
+          </a-tooltip>
+          <a-button v-if="format === 'json'" ghost style="margin-right: 10px" @click="formatJSON(2)">格式化</a-button>
           <a-select style="width: 120px" v-model="format" @change="handleChange">
             <a-select-option value="plain_text">纯文本</a-select-option>
             <a-select-option value="json">JSON字符串</a-select-option>
@@ -113,6 +116,7 @@ import { getAllKvs, putKv, deleteKv } from "./../api/kv.js";
 import { listToTree, removeTreeNode, insertNode } from "./helper.etcdEdit.js";
 import AceEditor from "./../components/AceEditor";
 import ModelInputKey from "./ModelInputKey";
+import { getDefaultFormat, setDefaultFormat } from "./../util/storage.js";
 
 export default {
   name: "EtcdEdit",
@@ -135,6 +139,7 @@ export default {
       replaceFields: {
         title: "name",
       },
+      defaultType: "plain_text",
       format: "plain_text",
       currentSelect: [],
       currentEdit: {},
@@ -143,6 +148,9 @@ export default {
     };
   },
   computed: {
+    isDefaultType() {
+      return this.defaultType === this.format;
+    },
     hasSelectKey() {
       return this.currentSelect.length > 0;
     },
@@ -183,6 +191,10 @@ export default {
       },
     },
   },
+  created() {
+    this.defaultType = getDefaultFormat(this.connectAddr) || "plain_text";
+    this.format = this.defaultType;
+  },
   methods: {
     async fetchKvs() {
       this.loading = true;
@@ -220,6 +232,10 @@ export default {
       } finally {
         this.saving = false;
       }
+    },
+    onTypeChange(isDefault) {
+      this.defaultType = this.format;
+      setDefaultFormat(this.connectAddr, this.format);
     },
     confirmDelete() {
       const { key, isNew } = this.currentEdit;
@@ -345,7 +361,7 @@ export default {
   border: none !important;
   background: rgba(255, 255, 255, 0.9);
 }
-.ant-radio-group >>> .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled){
+.ant-radio-group >>> .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
   background: #1890ff;
 }
 

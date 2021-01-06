@@ -1,6 +1,7 @@
 /* eslint-disable no-empty */
 const TOKEN_KEY = "easyEtcdTokens";
 const ENDPOINTS_KEY = "endpoints";
+const DEFAULT_FORMAT_KEY = "default_format";
 
 export function setTokens(key, value) {
   const tokens = getTokens();
@@ -73,4 +74,12 @@ export function getEndpoint() {
   } catch (error) {}
 
   return list;
+}
+
+export function setDefaultFormat(endpoint, format) {
+  return localStorage.setItem(`${DEFAULT_FORMAT_KEY}_${endpoint}`, format);
+}
+
+export function getDefaultFormat(endpoint) {
+  return localStorage.getItem(`${DEFAULT_FORMAT_KEY}_${endpoint}`);
 }

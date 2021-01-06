@@ -2,8 +2,10 @@ import axios from "axios";
 import { getTokens } from "./../util/storage";
 import { message } from "ant-design-vue";
 
+const isDev = process.env.NODE_ENV === "development";
+
 const instance = axios.create({
-  baseURL: "/api/"
+  baseURL: isDev ? "http://localhost:9600/api/" : "/api/"
 });
 
 instance.interceptors.request.use(config => {
