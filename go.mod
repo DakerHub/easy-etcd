@@ -6,6 +6,7 @@ require (
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
 	github.com/coreos/go-etcd v2.0.0+incompatible
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/validator/v10 v10.4.1 // indirect

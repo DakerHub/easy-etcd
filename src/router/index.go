@@ -3,6 +3,7 @@ package router
 import (
 	"easy-etcd/src/config"
 	"easy-etcd/src/router/etcd"
+	"easy-etcd/src/router/user"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +15,8 @@ func SetupRouter() {
 	r.Static("/", config.StaticDir)
 
 	api := r.Group("/api")
+	api.POST("/login", user.RouteLogin)
+
 	api.Use(etcd.GetAuth())
 	{
 		api.POST("/connect", etcd.RouteConnect)

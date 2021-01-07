@@ -12,13 +12,13 @@ type GetAllKVParams struct {
 
 type DelKeyPamras struct {
 	Nodes []string `json:"nodes" binding:"required"`
-	Key   string   `json:"key", binding:"required"`
+	Key   string   `json:"key" binding:"required"`
 }
 
 type PutKvPamras struct {
 	Nodes []string `json:"nodes" binding:"required"`
-	Key   string   `json:"key", binding:"required"`
-	Value string   `json:"value", binding:"required"`
+	Key   string   `json:"key" binding:"required"`
+	Value string   `json:"value" binding:"required"`
 }
 
 func RouteConnect(c *gin.Context) {

@@ -37,7 +37,8 @@ func Put(machines []string, auth Auth, key string, value string) (*clientv3.PutR
 	}
 	defer client.Close()
 
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	res, error := client.Put(ctx, key, value)
 	return res, error
 }
@@ -50,7 +51,8 @@ func GetByPrefix(machines []string, auth Auth, key string) (*clientv3.GetRespons
 	}
 	defer client.Close()
 
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	return client.Get(ctx, key, clientv3.WithPrefix())
 }
 
@@ -62,7 +64,8 @@ func GetSingle(machines []string, auth Auth, key string) (*clientv3.GetResponse,
 	}
 	defer client.Close()
 
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	return client.Get(ctx, key)
 }
 
@@ -74,7 +77,8 @@ func Del(machines []string, auth Auth, key string) error {
 	}
 	defer client.Close()
 
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	_, error := client.Delete(ctx, key)
 
 	return error
