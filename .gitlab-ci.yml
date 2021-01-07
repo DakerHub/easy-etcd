@@ -14,7 +14,7 @@ build-docker-dev:
   tags:
     - dev-docker
   only:
-    - dev
+    - master
   script:
     - chmod +x clear.sh
     - ./clear.sh easy-etcd
