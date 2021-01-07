@@ -1,0 +1,23 @@
+# dev 环境宿主机docker版本为20.10.1
+image: ccr.ccs.tencentyun.com/scloudservice/docker:20.10.1-dind
+# 腾讯云镜像仓库授权信息
+variables:
+  DOCKER_AUTH_CONFIG: '$DOCKER_AUTH'
+  DOCKER_DRIVER: overlay2
+
+stages:
+  - build
+
+# 开发环境构建
+build-docker-dev:
+  stage: build
+  tags:
+    - dev-docker
+  only:
+    - dev
+  script:
+    - chmod +x clear.sh
+    - ./clear.sh easy-etcd
+    - echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_USER --password-stdin $DOCKER_REGISTRY
+    - docker build --no-cache --tag $CI_REGISTRY/easy-etcd:latest .
+    - docker push $CI_REGISTRY/easy-etcd:latest
