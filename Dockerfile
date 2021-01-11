@@ -1,6 +1,9 @@
 # Debian 10
 FROM golang:1.15-alpine
 
+RUN mkdir -p /data/backup
+
+ENV EASY_ETCD_BACKUP_DIR=/data/backup
 
 RUN mkdir -p /var/www/html
 
