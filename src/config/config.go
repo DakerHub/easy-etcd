@@ -21,3 +21,6 @@ var AdminPassword = os.Getenv("EASY_ETCD_PASSWORD")
 
 // AdminSecret 系统秘钥
 var AdminSecret = os.Getenv("Secret")
+
+// BackupDir 备份目录
+var BackupDir = os.Getenv("EASY_ETCD_BACKUP_DIR")

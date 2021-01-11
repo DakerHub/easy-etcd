@@ -12,8 +12,6 @@ import (
 func SetupRouter() {
 	r := gin.Default()
 
-	r.Static("/", config.StaticDir)
-
 	api := r.Group("/api")
 	api.POST("/login", user.RouteLogin)
 
@@ -23,7 +21,13 @@ func SetupRouter() {
 		api.POST("/kv/query", etcd.RouteGetAllKv)
 		api.POST("/kv/delete", etcd.RouteDeleteKey)
 		api.POST("/kv/put", etcd.RoutePutKv)
+		api.POST("/snapshot/create", etcd.RouteCreateSnapshot)
+		api.POST("/snapshot/query", etcd.RouteGetSnapshot)
+		api.POST("/snapshot/delete", etcd.RouteDeleteSnapshot)
+		api.POST("/restore", etcd.RouteRestore)
 	}
+
+	r.Static("/", config.StaticDir)
 
 	r.Run(config.Host + ":" + config.Port)
 }

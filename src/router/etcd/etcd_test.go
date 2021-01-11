@@ -56,3 +56,30 @@ func TestDel(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestSnapshot(t *testing.T) {
+	err := Snapshot(m, auth)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetAllLocalSnapshot(t *testing.T) {
+	kvs, err := GetAllLocalSnapshot("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(kvs)
+}
+
+func TestRestoreBySnapshot(t *testing.T) {
+	RestoreBySnapshot(m, auth, "localhost:2379_1610345396_2", true)
+}
+
+func TestDeleteLocalSnapshot(t *testing.T) {
+	err := DeleteLocalSnapshot("localhost:2379_1610345396_2")
+	if err != nil {
+		t.Fatal(err)
+	}
+}

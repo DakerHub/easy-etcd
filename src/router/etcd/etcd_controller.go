@@ -115,3 +115,136 @@ func RoutePutKv(c *gin.Context) {
 		"message": "OK",
 	})
 }
+
+type CreateSnapshotParams struct {
+	Nodes []string `json:"nodes" binding:"required"`
+}
+
+func RouteCreateSnapshot(c *gin.Context) {
+	params := CreateSnapshotParams{}
+	if c.ShouldBind(&params) != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "请求参数错误",
+		})
+		return
+	}
+
+	auth, _ := c.Get("auth")
+
+	err := Snapshot(params.Nodes, auth.(Auth))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": "创建Snapshot失败",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "OK",
+	})
+}
+
+type GetSnapshotParams struct {
+	Nodes []string `json:"nodes" binding:"required"`
+}
+
+func RouteGetSnapshot(c *gin.Context) {
+	params := GetSnapshotParams{}
+	if c.ShouldBind(&params) != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "请求参数错误",
+		})
+		return
+	}
+
+	auth, _ := c.Get("auth")
+
+	_, err := Connect(params.Nodes, auth.(Auth))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	snapshots, err := GetAllLocalSnapshot(params.Nodes[0])
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "OK",
+		"data":    snapshots,
+	})
+}
+
+type RestoreParams struct {
+	Nodes      []string `json:"nodes" binding:"required"`
+	SnapshotID string   `json:"snapshotID" binding:"required"`
+	Clear      bool     `json:"clear" binding:"required"`
+}
+
+func RouteRestore(c *gin.Context) {
+	params := RestoreParams{}
+	if c.ShouldBind(&params) != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "请求参数错误",
+		})
+		return
+	}
+
+	auth, _ := c.Get("auth")
+
+	err := RestoreBySnapshot(params.Nodes, auth.(Auth), params.SnapshotID, params.Clear)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "OK",
+	})
+}
+
+type DelSnapshotParams struct {
+	Nodes      []string `json:"nodes" binding:"required"`
+	SnapshotID string   `json:"snapshotID" binding:"required"`
+}
+
+func RouteDeleteSnapshot(c *gin.Context) {
+	params := DelSnapshotParams{}
+	if c.ShouldBind(&params) != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "请求参数错误",
+		})
+		return
+	}
+
+	auth, _ := c.Get("auth")
+
+	_, err := Connect(params.Nodes, auth.(Auth))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	err = DeleteLocalSnapshot(params.SnapshotID)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": "删除Snapshot失败",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "OK",
+	})
+}
