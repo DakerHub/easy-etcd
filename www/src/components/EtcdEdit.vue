@@ -4,16 +4,21 @@
     <div class="tree-view">
       <template v-if="treeData.length">
         <div class="tree-view-tool">
-          <ModelInputKey
-            title="新建键值对"
-            placeholder="请输入建名，以“/”作为分隔符。比如：/config/app/user"
-            @change="checkKeyExist"
-          >
-            <template v-slot="{ open }">
-              <!-- <a-icon type="plus" @click.native="open"></a-icon> -->
-              <a-button type="link" icon="file-add" @click="open" ghost size="small"></a-button>
-            </template>
-          </ModelInputKey>
+          <div class="tree-view-tool-extendable">
+            <ModelInputKey
+              title="新建键值对"
+              placeholder="请输入建名，以“/”作为分隔符。比如：/config/app/user"
+              @change="checkKeyExist"
+            >
+              <template v-slot="{ open }">
+                <!-- <a-icon type="plus" @click.native="open"></a-icon> -->
+                <a-tooltip title="新增键值">
+                  <a-button type="link" icon="file-add" @click="open" ghost size="small"></a-button>
+                </a-tooltip>
+              </template>
+            </ModelInputKey>
+            <Snapshot :connectAddr="connectAddr" @restore="fetchKvs"></Snapshot>
+          </div>
           <div>
             <a-radio-group v-model="listMode" size="small" button-style="solid">
               <a-radio-button value="list"> <a-icon type="ordered-list"></a-icon> </a-radio-button>
@@ -59,12 +64,18 @@
       </template>
 
       <div v-else-if="loading">加载中...</div>
+      <div v-else-if="connectError">
+        <p style="text-align: center">连接失败 <a-icon type="frown" /></p>
+        <p style="text-align: center">
+          <a-button type="primary" icon="redo" @click="fetchKvs">重试</a-button>
+        </p>
+      </div>
 
       <div v-else class="etcd-empty">
         <p>没有任何配置 <a-icon type="meh" /></p>
         <ModelInputKey title="新建键值对" @change="checkKeyExist">
           <template v-slot="{ open }">
-            <a-button type="primary" icon="plus" @click="open">新建一条配置</a-button>
+            <a-button type="primary" icon="plus" @click="open">新建一条键值对</a-button>
           </template>
         </ModelInputKey>
       </div>
@@ -92,7 +103,10 @@
       <div class="edit-content__footer">
         <a-button :loading="saving" type="primary" icon="sync" @click="save">保存</a-button>
         <div>
-          <a-button v-if="format === 'json'" ghost style="margin-right: 5px" @click="formatJSON">格式化</a-button>
+          <a-tooltip title="设置为默认文本格式">
+            <a-switch :checked="isDefaultType" @change="onTypeChange" style="margin-right: 10px"></a-switch>
+          </a-tooltip>
+          <a-button v-if="format === 'json'" ghost style="margin-right: 10px" @click="formatJSON(2)">格式化</a-button>
           <a-select style="width: 120px" v-model="format" @change="handleChange">
             <a-select-option value="plain_text">纯文本</a-select-option>
             <a-select-option value="json">JSON字符串</a-select-option>
@@ -113,12 +127,15 @@ import { getAllKvs, putKv, deleteKv } from "./../api/kv.js";
 import { listToTree, removeTreeNode, insertNode } from "./helper.etcdEdit.js";
 import AceEditor from "./../components/AceEditor";
 import ModelInputKey from "./ModelInputKey";
+import Snapshot from "./Snapshot";
+import { getDefaultFormat, setDefaultFormat } from "./../util/storage.js";
 
 export default {
   name: "EtcdEdit",
   components: {
     AceEditor,
     ModelInputKey,
+    Snapshot,
   },
   props: {
     connectAddr: {
@@ -135,14 +152,19 @@ export default {
       replaceFields: {
         title: "name",
       },
+      defaultType: "plain_text",
       format: "plain_text",
       currentSelect: [],
       currentEdit: {},
       loading: true,
       saving: false,
+      connectError: false,
     };
   },
   computed: {
+    isDefaultType() {
+      return this.defaultType === this.format;
+    },
     hasSelectKey() {
       return this.currentSelect.length > 0;
     },
@@ -179,9 +201,15 @@ export default {
       immediate: true,
       handler() {
         this.currentSelect = [];
+        this.rawList = [];
+        this.treeData = [];
+        this.initFormatter();
         this.fetchKvs();
       },
     },
+  },
+  created() {
+    this.initFormatter();
   },
   methods: {
     async fetchKvs() {
@@ -192,6 +220,7 @@ export default {
         this.listToTree();
       } catch (error) {
         console.error(error);
+        this.connectError = true;
       } finally {
         this.loading = false;
       }
@@ -220,6 +249,14 @@ export default {
       } finally {
         this.saving = false;
       }
+    },
+    initFormatter() {
+      this.defaultType = getDefaultFormat(this.connectAddr) || "plain_text";
+      this.format = this.defaultType;
+    },
+    onTypeChange(isDefault) {
+      this.defaultType = this.format;
+      setDefaultFormat(this.connectAddr, this.format);
     },
     confirmDelete() {
       const { key, isNew } = this.currentEdit;
@@ -333,11 +370,17 @@ export default {
   padding: 5px;
   border-left: 2px solid #ccc;
 }
+.tree-view-tool-extendable {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .tree-view-main {
   height: 100%;
   overflow: auto;
 }
-.tree-view-tool .ant-btn-background-ghost:hover {
+.tree-view-tool >>> .ant-btn-background-ghost:hover {
   background-color: var(--bg-color-2) !important;
 }
 .ant-radio-group >>> .ant-radio-button-wrapper {
@@ -345,7 +388,7 @@ export default {
   border: none !important;
   background: rgba(255, 255, 255, 0.9);
 }
-.ant-radio-group >>> .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled){
+.ant-radio-group >>> .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
   background: #1890ff;
 }
 

@@ -1,6 +1,7 @@
 package etcd
 
 import (
+	"easy-etcd/src/jwt"
 	"encoding/base64"
 	"errors"
 	"net/http"
@@ -53,6 +54,21 @@ func GetAuth() gin.HandlerFunc {
 			return
 		}
 
+		token, err := c.Cookie("token")
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"message": "请先登录",
+			})
+			return
+		}
+		_, _, tokenErr := jwt.DecodeJWT(token)
+		if tokenErr != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"message": "token无效，请重新登录",
+			})
+			return
+		}
+
 		c.Set("auth", Auth{
 			Username: u,
 			Password: p,
@@ -73,10 +89,10 @@ func DecodeBasicAuthHeader(header string) (string, string, error) {
 		return "", "", err
 	}
 
-	userAndPass := strings.SplitN(string(decoded), ":", 2)
-	if len(userAndPass) != 2 {
+	auth := strings.SplitN(string(decoded), ":", 2)
+	if len(auth) != 2 {
 		return "", "", errors.New("Invalid basic auth header")
 	}
 
-	return userAndPass[0], userAndPass[1], nil
+	return auth[0], auth[1], nil
 }
